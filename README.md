@@ -12,3 +12,7 @@ The locations of structures don't include the Y level, so the waypoint spawns at
 * The map is telling me there's a structure here but there's nothing here!
 
 Make sure you have the right world seed - if you mistyped it the map will not accurately have the structures displayed. Also, check if you're on the right Y level (see above)
+
+* When will you add <x> feature?
+
+I don't realy have many features to add, so if you have any ideas open an issue.
