@@ -31,6 +31,10 @@ repositories {
 		name = 'DJtheRedstoner'
 		url = 'https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1'
 	}
+	maven {
+		name = 'Modrinth'
+		url = 'https://api.modrinth.com/maven'
+	}
 }
 
 dependencies {
@@ -49,6 +53,13 @@ dependencies {
 	include modImplementation("dev.xpple:clientarguments:${project.clientarguments_version}")
 	include modImplementation("dev.xpple:betterconfig-fabric:${project.betterconfig_version}")
 	include modImplementation("dev.xpple:simplewaypoints:${project.simplewaypoints_version}")
+
+	// Xaero's Minimap and WorldMap - local JARs for compile-time access
+	// Download these manually from Modrinth and place in libs/ folder:
+	// https://modrinth.com/mod/xaeros-minimap/versions
+	// https://modrinth.com/mod/xaeros-world-map/versions
+	modCompileOnly files('libs/Xaeros_Minimap_25.2.14_Fabric_1.21.9.jar')
+	modCompileOnly files('libs/XaerosWorldMap_1.39.17_Fabric_1.21.9.jar')
 
 	modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:${project.devauth_version}") {
 		exclude group: 'net.fabricmc', module: 'fabric-loader'

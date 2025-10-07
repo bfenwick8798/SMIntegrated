@@ -102,5 +102,7 @@
   "seedMap.coordinatesCopied": "%s (coordinates copied!)",
   "seedMap.teleportEditBoxX": "Edit box X coordinate",
   "seedMap.teleportEditBoxZ": "Edit box Z coordinate",
-  "seedMap.waypointNameEditBox": "Waypoint name edit box"
+  "seedMap.waypointNameEditBox": "Waypoint name edit box",
+  "seedMap.contextMenu.createWaypoint": "Create Waypoint",
+  "seedMap.contextMenu.waypointCreated": "Waypoint \"%s\" created!"
 }

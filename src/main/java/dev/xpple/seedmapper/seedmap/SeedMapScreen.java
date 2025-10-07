@@ -205,6 +205,7 @@ public class SeedMapScreen extends Screen {
 
     private @Nullable FeatureWidget markerWidget = null;
     private @Nullable ChestLootWidget chestLootWidget = null;
+    private @Nullable ContextMenuWidget contextMenuWidget = null;
 
     private Registry<Enchantment> enchantmentsRegistry;
 
@@ -448,6 +449,11 @@ public class SeedMapScreen extends Screen {
         // draw chest loot widget
         if (this.chestLootWidget != null) {
             this.chestLootWidget.render(guiGraphics, mouseX, mouseY, this.font);
+        }
+
+        // draw context menu
+        if (this.contextMenuWidget != null) {
+            this.contextMenuWidget.render(guiGraphics, mouseX, mouseY, this.font);
         }
 
         // draw hovered coordinates
@@ -714,6 +720,7 @@ public class SeedMapScreen extends Screen {
         super.resize(minecraft, width, height);
         this.moveCenter(this.centerQuart);
         this.chestLootWidget = null;
+        this.contextMenuWidget = null;
     }
 
     @Override
@@ -774,6 +781,12 @@ public class SeedMapScreen extends Screen {
             return true;
         }
         int button = mouseButtonEvent.button();
+        if (this.contextMenuWidget != null && this.contextMenuWidget.mouseClicked(mouseButtonEvent, doubleClick)) {
+            this.contextMenuWidget = null;
+            return true;
+        } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
+            this.contextMenuWidget = null;
+        }
         if (this.chestLootWidget != null && this.chestLootWidget.mouseClicked(mouseButtonEvent, doubleClick)) {
             return true;
         } else if (button == InputConstants.MOUSE_BUTTON_LEFT) {
@@ -783,6 +796,9 @@ public class SeedMapScreen extends Screen {
             return true;
         }
         if (this.handleMapMiddleClicked(mouseButtonEvent, doubleClick)) {
+            return true;
+        }
+        if (this.handleMapFeatureRightClicked(mouseButtonEvent, doubleClick)) {
             return true;
         }
         if (this.handleMapRightClicked(mouseButtonEvent, doubleClick)) {
@@ -903,6 +919,72 @@ public class SeedMapScreen extends Screen {
         return true;
     }
 
+    private boolean handleMapFeatureRightClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
+        int button = mouseButtonEvent.button();
+        if (button != InputConstants.MOUSE_BUTTON_RIGHT) {
+            return false;
+        }
+        double mouseX = mouseButtonEvent.x();
+        double mouseY = mouseButtonEvent.y();
+        if (mouseX < HORIZONTAL_PADDING || mouseX > HORIZONTAL_PADDING + this.seedMapWidth || mouseY < VERTICAL_PADDING || mouseY > VERTICAL_PADDING + this.seedMapHeight) {
+            return false;
+        }
+        
+        // Check if right-clicked on a feature widget
+        Optional<FeatureWidget> optionalFeatureWidget = this.featureWidgets.stream()
+            .filter(widget -> mouseX >= widget.x && mouseX <= widget.x + widget.width() && mouseY >= widget.y && mouseY <= widget.y + widget.height())
+            .findAny();
+        if (optionalFeatureWidget.isEmpty()) {
+            return false;
+        }
+        
+        FeatureWidget widget = optionalFeatureWidget.get();
+        
+        // Don't show context menu for waypoints themselves
+        if (widget.feature == MapFeature.WAYPOINT) {
+            return false;
+        }
+        
+        // Create context menu at mouse position
+        this.contextMenuWidget = new ContextMenuWidget((int) mouseX, (int) mouseY);
+        
+        // Add "Create Waypoint" menu item
+        this.contextMenuWidget.addMenuItem(
+            Component.translatable("seedMap.contextMenu.createWaypoint"),
+            _ -> {
+                // Generate waypoint name from feature name
+                String featureName = widget.feature.getName();
+                BlockPos pos = widget.featureLocation;
+                String waypointName = "%s_%d_%d".formatted(featureName, pos.getX(), pos.getZ());
+                
+                // Use player's current Y level to avoid waypoint spawning underground
+                int waypointY = this.minecraft.player != null ? (int) this.minecraft.player.getY() : pos.getY();
+                
+                try {
+                    dev.xpple.seedmapper.api.WaypointAPI.addWaypoint(
+                        DIM_ID_TO_MC.get(this.dimension),
+                        pos.getX(),
+                        waypointY,
+                        pos.getZ(),
+                        waypointName
+                    );
+                    if (this.minecraft.player != null) {
+                        this.minecraft.player.displayClientMessage(
+                            Component.translatable("seedMap.contextMenu.waypointCreated", waypointName),
+                            false
+                        );
+                    }
+                } catch (CommandSyntaxException e) {
+                    if (this.minecraft.player != null) {
+                        this.minecraft.player.displayClientMessage(error((MutableComponent) e.getRawMessage()), false);
+                    }
+                }
+            }
+        );
+        
+        return true;
+    }
+
     private boolean handleMapRightClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
         int button = mouseButtonEvent.button();
         if (button != InputConstants.MOUSE_BUTTON_RIGHT) {
@@ -974,13 +1056,15 @@ public class SeedMapScreen extends Screen {
         if (waypointName.isEmpty()) {
             return false;
         }
-        SimpleWaypointsAPI waypointsApi = SimpleWaypointsAPI.getInstance();
-        String identifier = waypointsApi.getWorldIdentifier(this.minecraft);
-        if (identifier == null) {
-            return false;
-        }
         try {
-            waypointsApi.addWaypoint(identifier, DIM_ID_TO_MC.get(this.dimension), waypointName, this.markerWidget.featureLocation);
+            BlockPos pos = this.markerWidget.featureLocation;
+            dev.xpple.seedmapper.api.WaypointAPI.addWaypoint(
+                DIM_ID_TO_MC.get(this.dimension),
+                pos.getX(),
+                pos.getY(),
+                pos.getZ(),
+                waypointName
+            );
         } catch (CommandSyntaxException e) {
             LocalPlayer player = this.minecraft.player;
             if (player != null) {
@@ -989,6 +1073,7 @@ public class SeedMapScreen extends Screen {
             return false;
         }
         this.waypointNameEditBox.setValue("");
+        this.markerWidget = null;
         return true;
     }
 
