@@ -2,7 +2,7 @@ A fork of [SeedMapper](https://github.com/xpple/SeedMapper) aiming to add integr
 ## PLEASE DO NOT CONTACT XPPLE ABOUT ISSUES WITH THIS MOD! 
 My code might have messed some stuff up, so make an issue here!
 
-Thanks to rfresh for telling me how [XaeroPlus](https://github.com/rfresh2/XaeroPlus) handles adding waypoints to Xaero's Minimap
+Thanks to rfresh for telling me how [XaeroPlus](https://github.com/rfresh2/XaeroPlus) handles adding waypoints to Xaero's Minimap (because there's no documentation anywhere that I could find)
 
 ## FAQ
 * Why aren't my waypoints appearing where the structure is?
